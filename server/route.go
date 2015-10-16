@@ -337,6 +337,21 @@ func (s *Server) connectToRoute(rUrl *url.URL) {
 	}
 }
 
+func (s *Server) connectToRouteOnce(rUrl *url.URL) error {
+	if s.isRunning() {
+		Debugf("Trying to connect to route on %s", rUrl.Host)
+		conn, err := net.DialTimeout("tcp", rUrl.Host, DEFAULT_ROUTE_DIAL)
+		if err != nil {
+			Debugf("Error trying to connect to route: %v", err)
+			return err
+		}
+		// We have a route connection here.
+		// Go ahead and create it and exit this func.
+		s.createRoute(conn, rUrl)
+	}
+	return nil
+}
+
 func (c *client) isSolicitedRoute() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()

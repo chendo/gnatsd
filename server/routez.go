@@ -65,7 +65,7 @@ func (s *Server) HandleRoutez(w http.ResponseWriter, req *http.Request) {
 		r.NumRoutes = len(r.Routes)
 		b, err := json.MarshalIndent(r, "", "  ")
 		if err != nil {
-			Fatalf("Error marshalling response to /routez request: %v", err)
+			Errorf("Error marshalling response to /routez request: %v", err)
 		}
 		w.Write(b)
 	} else if req.Method == "PUT" {
@@ -78,8 +78,12 @@ func (s *Server) HandleRoutez(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		s.connectToRoute(routeURL)
-		w.Write([]byte(`{"status": "ok"}`))
+		err = s.connectToRouteOnce(routeURL)
+		if err == nil {
+			w.Write([]byte(`{"status": "ok"}`))
+		} else {
+			w.Write([]byte(fmt.Sprintf(`{"error": "could not connect: %v"}`, err)))
+		}
 	} else if req.Method == "DELETE" {
 		body := make([]byte, 1024)
 		req.Body.Read(body)
